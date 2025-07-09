@@ -9,6 +9,14 @@ class Saving extends Model
 {
 	use HasFactory;
 
+	protected $fillable = [
+		'user_id',
+		'saving_type_id',
+		'amount',
+		'date',
+		'notes',
+	];
+
 	public function user()
 	{
 		return $this->belongsTo(User::class);
