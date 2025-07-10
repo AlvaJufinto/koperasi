@@ -18,6 +18,7 @@ class Loan extends Model
 		'interest',
 		'tenor_months',
 		'installment_amount',
+		'remaining_amount',
 		'approved_date',
 		'notes',
 	];

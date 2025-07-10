@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Saving;
+use App\Models\SavingType;
 use App\Models\Status;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -83,7 +85,7 @@ class UserSeeder extends Seeder
 		];
 
 		foreach ($users as $user) {
-			User::create([
+			$newUser = User::create([
 				'code' => $user['code'],
 				'name' => $user['name'],
 				'phone' => '08' . mt_rand(100000000, 999999999),
@@ -93,6 +95,14 @@ class UserSeeder extends Seeder
 				'status_id' => $statusId,
 				'role_id' => $roleId,
 				'password' => $password,
+			]);
+
+			Saving::create([
+				'user_id' => $newUser['id'],
+				'saving_type_id' => 1,
+				'amount' => 20000,
+				'date' => now(),
+				'notes' => 'Simpanan Pokok',
 			]);
 		}
 	}

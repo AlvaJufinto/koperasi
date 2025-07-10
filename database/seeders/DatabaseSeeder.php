@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Models\LoanStatus;
 use App\Models\Role;
+use App\Models\SavingType;
 use App\Models\Status;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -73,6 +74,25 @@ class DatabaseSeeder extends Seeder
 				'code' => 'rejected',
 				'description' => 'ditolak'
 			],
+		]);
+
+		SavingType::insert([
+			[
+				'code' => 'SP',
+				'description' => 'Simpanan Pokok'
+			],
+			[
+				'code' => 'SW',
+				'description' => 'Simpanan Wajib'
+			],
+			[
+				'code' => 'SS',
+				'description' => 'Simpanan Sukarela'
+			],
+			[
+				'code' => 'TARIK_SS',
+				'description' => 'Tarik Simpanan Sukarela'
+			]
 		]);
 
 		$this->call(UserSeeder::class);
