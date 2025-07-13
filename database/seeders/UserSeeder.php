@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\Saving;
 use App\Models\SavingType;
 use App\Models\Status;
+use App\Models\Transaction;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -103,6 +104,14 @@ class UserSeeder extends Seeder
 				'amount' => 20000,
 				'date' => now(),
 				'notes' => 'Simpanan Pokok',
+			]);
+
+			Transaction::create([
+				'user_id' => $newUser['id'],
+				'transaction_type_id' => 1,
+				'date' => now(),
+				'amount' => 20000,
+				'note' => 'Simpanan Pokok',
 			]);
 		}
 	}

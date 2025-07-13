@@ -1,13 +1,18 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { ContactRoundIcon, LayoutDashboard, LogOut, User } from "lucide-react";
+import {
+	ContactRoundIcon,
+	LayoutDashboard,
+	LogOut,
+	User,
+} from 'lucide-react';
 
-import Dropdown from "@/Components/Dropdown";
-import NavLink from "@/Components/NavLink";
-import Profile from "@/Components/Profile";
-import { Link } from "@inertiajs/react";
+import Dropdown from '@/Components/Dropdown';
+import NavLink from '@/Components/NavLink';
+import Profile from '@/Components/Profile';
+import { Link } from '@inertiajs/react';
 
-import FlashMessage from "./FlashMessage";
+import FlashMessage from './FlashMessage';
 
 function Sidebar({
   isSidebarOpen,

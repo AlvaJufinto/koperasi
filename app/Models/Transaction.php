@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Saving extends Model
+class Transaction extends Model
 {
 	use HasFactory;
 
 	protected $fillable = [
 		'user_id',
-		'saving_type_id',
-		'amount',
+		'transaction_type_id',
 		'date',
-		'notes',
+		'amount',
+		'note',
 	];
 
 	public function user()
@@ -22,10 +22,8 @@ class Saving extends Model
 		return $this->belongsTo(User::class);
 	}
 
-	public function savingType()
+	public function transactionType()
 	{
-		return $this
-			->belongsTo(TransactionType::class)
-			->where('is_saving_type', true);
+		return $this->belongsTo(TransactionType::class);
 	}
 }

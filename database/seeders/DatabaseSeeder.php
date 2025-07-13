@@ -8,6 +8,7 @@ use App\Models\LoanStatus;
 use App\Models\Role;
 use App\Models\SavingType;
 use App\Models\Status;
+use App\Models\TransactionType;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -76,22 +77,56 @@ class DatabaseSeeder extends Seeder
 			],
 		]);
 
-		SavingType::insert([
+		TransactionType::insert([
 			[
 				'code' => 'SP',
-				'description' => 'Simpanan Pokok'
+				'description' => 'Simpanan Pokok',
+				'is_saving_type' => true
 			],
 			[
 				'code' => 'SW',
-				'description' => 'Simpanan Wajib'
+				'description' => 'Simpanan Wajib',
+				'is_saving_type' => true
 			],
 			[
 				'code' => 'SS',
-				'description' => 'Simpanan Sukarela'
+				'description' => 'Simpanan Sukarela',
+				'is_saving_type' => true
 			],
 			[
 				'code' => 'TARIK_SS',
-				'description' => 'Tarik Simpanan Sukarela'
+				'description' => 'Tarik Simpanan Sukarela',
+				'is_saving_type' => true
+			],
+			[
+				'code' => 'PINJAMAN',
+				'description' => 'Pencairan Pinjaman',
+				'is_saving_type' => false
+			],
+			[
+				'code' => 'ANGSURAN',
+				'description' => 'Nyicil',
+				'is_saving_type' => false
+			],
+			[
+				'code' => 'BUNGA',
+				'description' => 'Pembayaran Pinjaman',
+				'is_saving_type' => false
+			],
+			[
+				'code' => 'ADMIN_FEE',
+				'description' => 'Potongan Biaya Admin',
+				'is_saving_type' => false
+			],
+			[
+				'code' => 'SHU_SS',
+				'description' => 'Pembagian SHU Simpanan',
+				'is_saving_type' => false
+			],
+			[
+				'code' => 'SHU_PINJAMAN',
+				'description' => 'Pembagian SHU Pinjaman',
+				'is_saving_type' => false
 			]
 		]);
 

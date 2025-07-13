@@ -1,8 +1,11 @@
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link } from "@inertiajs/react";
+import Table from '@/Components/Table';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import {
+	Head,
+	Link,
+} from '@inertiajs/react';
 
 export default function Index({ auth, users }: any) {
-  console.log("🚀 ~ Index ~ users:", users);
   const getSavingAmount = (user: any, type: string) =>
     user.savings.find((s: any) => s.type === type)?.amount || 0;
 
@@ -30,59 +33,64 @@ export default function Index({ auth, users }: any) {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm border border-gray-300">
-              <thead className="bg-gray-100 text-left">
-                <tr>
-                  <th className="px-3 py-2 border">No</th>
-                  <th className="px-3 py-2 border">Kode</th>
-                  <th className="px-3 py-2 border">Nama</th>
-                  <th className="px-3 py-2 border">Status</th>
-                  <th className="px-3 py-2 border">Tgl Gabung</th>
-                  <th className="px-3 py-2 border">SP</th>
-                  <th className="px-3 py-2 border">SW</th>
-                  <th className="px-3 py-2 border">SS</th>
-                  <th className="px-3 py-2 border">Total Pinj.</th>
-                  <th className="px-3 py-2 border">Sisa Pinj.</th>
-                  <th className="px-3 py-2 border">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users?.map((user: any, i: any) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 border">{i + 1}</td>
-                    <td className="px-3 py-2 border">{user.code}</td>
-                    <td className="px-3 py-2 border">{user.name}</td>
-                    <td className="px-3 py-2 border">{user.status.code}</td>
-                    <td className="px-3 py-2 border">
-                      {user.join_date ?? "-"}
-                    </td>
-                    <td className="px-3 py-2 border text-right">
-                      {getSavingAmount(user, "SP")}
-                    </td>
-                    <td className="px-3 py-2 border text-right">
-                      {getSavingAmount(user, "SW")}
-                    </td>
-                    <td className="px-3 py-2 border text-right">
-                      {getSavingAmount(user, "SS")}
-                    </td>
-                    <td className="px-3 py-2 border text-right">
-                      {user.total_loan ?? 0}
-                    </td>
-                    <td className="px-3 py-2 border text-right">
-                      {user.remaining_loan ?? 0}
-                    </td>
-                    <td className="px-3 py-2 border">
+            <Table
+              data={users.data}
+              columns={[
+                { label: "No", accessor: "id", render: (_, i) => i + 1 },
+                { label: "Kode", accessor: "code" },
+                { label: "Nama", accessor: "name" },
+                { label: "Status", accessor: "status.code" },
+                { label: "Tgl Gabung", accessor: "join_date" },
+                {
+                  label: "SP",
+                  accessor: "sp",
+                  align: "right",
+                  render: (user) => getSavingAmount(user, "SP"),
+                },
+                {
+                  label: "SW",
+                  accessor: "sw",
+                  align: "right",
+                  render: (user) => getSavingAmount(user, "SW"),
+                },
+                {
+                  label: "SS",
+                  accessor: "ss",
+                  align: "right",
+                  render: (user) => getSavingAmount(user, "SS"),
+                },
+                {
+                  label: "Total Pinj.",
+                  accessor: "total_loan",
+                  align: "right",
+                },
+                {
+                  label: "Sisa Pinj.",
+                  accessor: "remaining_loan",
+                  align: "right",
+                },
+                {
+                  label: "Action",
+                  accessor: "action",
+                  render: (user) => (
+                    <div className="space-x-2">
                       <Link
                         href={route("user.show", user.id)}
                         className="text-blue-600 hover:underline"
                       >
                         Detail
                       </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <Link
+                        href={route("user.edit", user.id)}
+                        className="text-green-600 hover:underline"
+                      >
+                        Edit
+                      </Link>
+                    </div>
+                  ),
+                },
+              ]}
+            />
           </div>
         </div>
       </div>

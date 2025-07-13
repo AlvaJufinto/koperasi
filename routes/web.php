@@ -24,6 +24,8 @@ Route::middleware('auth')->group(function () {
 	})->name('dashboard');
 
 	Route::resource('user', UserController::class);
+	Route::resource('transaction', UserController::class);
+
 
 	Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
 	Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

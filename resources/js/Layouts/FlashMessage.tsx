@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import {
+	useEffect,
+	useState,
+} from 'react';
 
-import { usePage } from "@inertiajs/react";
+import { usePage } from '@inertiajs/react';
 
 interface IFlash {
   success?: string;
@@ -8,7 +11,10 @@ interface IFlash {
 }
 
 export default function FlashMessage({ externalFlash = null }) {
+  const { props } = usePage();
   const { flash } = usePage().props;
+  console.log("🚀 ~ FlashMessage ~ props:", props);
+  console.log("🚀 ~ FlashMessage ~ flash:", flash);
   const [visible, setVisible] = useState(false);
   const [showing, setShowing] = useState(false);
   const [message, setMessage] = useState("");

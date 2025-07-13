@@ -5,18 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SavingType extends Model
+class TransactionType extends Model
 {
 	use HasFactory;
 
 	protected $fillable = [
-		'level',
 		'code',
-		'description'
+		'description',
+		'is_saving_type',
 	];
 
-	public function savings()
-	{
-		return $this->hasMany(Saving::class);
-	}
+	public const SP = 1;
+	public const SW = 2;
+	public const SS = 3;
+	public const TARIK_SS = 4;
 }

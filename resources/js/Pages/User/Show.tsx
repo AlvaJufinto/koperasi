@@ -1,10 +1,23 @@
-import { Key } from "react";
-
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head } from "@inertiajs/react";
+import Button from '@/Components/Button';
+import Table from '@/Components/Table';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import {
+	Head,
+	Link,
+} from '@inertiajs/react';
 
 export default function Show({ auth, user, monthlyRecords, summary }: any) {
-  console.log("🚀 ~ Show ~ user:", user.name);
+  const columns = [
+    { label: "Bulan", accessor: "month" },
+    { label: "SP", accessor: "sp", align: "right" },
+    { label: "Angs", accessor: "angsuran", align: "right" },
+    { label: "Bunga", accessor: "bunga", align: "right" },
+    { label: "SW", accessor: "sw", align: "right" },
+    { label: "SS", accessor: "ss", align: "right" },
+    { label: "Total", accessor: "total", align: "right" },
+    { label: "Ambil SS", accessor: "tarik_ss", align: "right" },
+  ];
+
   return (
     <AuthenticatedLayout
       user={auth.user}
@@ -16,45 +29,19 @@ export default function Show({ auth, user, monthlyRecords, summary }: any) {
     >
       <Head title={`Detail ${user?.name}`} />
 
+      <Link href={route("user.index")} className="inline-block mb-4">
+        <Button type="default">← Kembali</Button>
+      </Link>
+
       <div className="grid grid-cols-3 gap-6 p-4">
-        {/* Left Table - Monthly Records */}
+        {/* Left Table */}
         <div className="col-span-2">
           <h2 className="text-lg font-semibold mb-2">Rekap Bulanan</h2>
-          <table className="min-w-full border text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border px-2 py-1">Bulan</th>
-                <th className="border px-2 py-1">SP</th>
-                <th className="border px-2 py-1">Angs</th>
-                <th className="border px-2 py-1">Bunga</th>
-                <th className="border px-2 py-1">SW</th>
-                <th className="border px-2 py-1">SS</th>
-                <th className="border px-2 py-1">Total</th>
-                <th className="border px-2 py-1">Ambil SS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {monthlyRecords.map((item: any, i: Number) => (
-                <tr key={i as Key}>
-                  <td className="border px-2 py-1">{item.month}</td>
-                  <td className="border px-2 py-1 text-right">{item.sp}</td>
-                  <td className="border px-2 py-1 text-right">
-                    {item.angsuran}
-                  </td>
-                  <td className="border px-2 py-1 text-right">{item.bunga}</td>
-                  <td className="border px-2 py-1 text-right">{item.sw}</td>
-                  <td className="border px-2 py-1 text-right">{item.ss}</td>
-                  <td className="border px-2 py-1 text-right">{item.total}</td>
-                  <td className="border px-2 py-1 text-right">
-                    {item.tarik_ss}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* @ts-ignore */}
+          <Table data={monthlyRecords} columns={columns} />
         </div>
 
-        {/* Right Summary Box */}
+        {/* Right Summary */}
         <div className="bg-white border rounded-md p-4 shadow-sm h-fit">
           <h3 className="text-lg font-semibold mb-2">Akumulasi</h3>
           <div className="space-y-2 text-sm">

@@ -11,11 +11,17 @@ return new class extends Migration
 	 */
 	public function up(): void
 	{
-		Schema::create('saving_types', function (Blueprint $table) {
+		Schema::create('transactions', function (Blueprint $table) {
 			$table->id();
 
-			$table->string('code');
-			$table->string('description');
+			$table->foreignId('user_id')->constrained()->onDelete('cascade');
+
+			$table->foreignId('transaction_type_id')->constrained()->onDelete('restrict');
+
+			$table->date('date');
+			$table->bigInteger('amount');
+
+			$table->string('note')->nullable();
 
 			$table->timestamps();
 		});
@@ -26,6 +32,6 @@ return new class extends Migration
 	 */
 	public function down(): void
 	{
-		Schema::dropIfExists('saving_types');
+		Schema::dropIfExists('transactions');
 	}
 };
