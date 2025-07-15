@@ -26,4 +26,15 @@ class Transaction extends Model
 	{
 		return $this->belongsTo(TransactionType::class);
 	}
+
+	public function scopeInMonth($query, $month)
+	{
+		return $query->whereYear('date', substr($month, 0, 4))
+			->whereMonth('date', substr($month, 5, 2));
+	}
+
+	public function scopeByUser($query, $userId)
+	{
+		return $query->where('user_id', $userId);
+	}
 }

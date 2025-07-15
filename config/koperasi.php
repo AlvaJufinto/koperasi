@@ -8,4 +8,8 @@ return [
 	'simpanan_pokok' => [
 		'amount' => 20000,
 	],
+	'pinjaman' => [
+		'admin_fee' => 1,
+		'bunga' => 1,
+	],
 ];

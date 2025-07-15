@@ -13,7 +13,7 @@ interface TableProps<T> {
 export default function Table<T>({ data, columns }: TableProps<T>) {
   return (
     <table className="min-w-full text-sm border border-gray-300">
-      <thead className="bg-gray-100 text-left">
+      <thead className="bg-gray-200 text-left">
         <tr>
           {columns.map((col, i) => (
             <th

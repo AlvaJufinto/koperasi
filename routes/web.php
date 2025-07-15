@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\LoanController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SavingController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -24,7 +27,13 @@ Route::middleware('auth')->group(function () {
 	})->name('dashboard');
 
 	Route::resource('user', UserController::class);
-	Route::resource('transaction', UserController::class);
+	Route::resource('transaction', TransactionController::class);
+	Route::resource('saving', SavingController::class);
+
+	Route::resource('loan', LoanController::class);
+	Route::get('/loans/{loan}/pay', [LoanController::class, 'payCreate'])->name('loan.payment.create');
+	Route::post('/loans/{loan}/pay', [LoanController::class, 'payStore'])->name('loan.payment.store');
+
 
 
 	Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

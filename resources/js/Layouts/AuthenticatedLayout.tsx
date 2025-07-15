@@ -1,18 +1,21 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 import {
-	ContactRoundIcon,
-	LayoutDashboard,
-	LogOut,
-	User,
-} from 'lucide-react';
+  Banknote,
+  HandCoins,
+  LayoutDashboard,
+  LogOut,
+  PiggyBank,
+  User,
+  Users,
+} from "lucide-react";
 
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import Profile from '@/Components/Profile';
-import { Link } from '@inertiajs/react';
+import Dropdown from "@/Components/Dropdown";
+import NavLink from "@/Components/NavLink";
+import Profile from "@/Components/Profile";
+import { Link } from "@inertiajs/react";
 
-import FlashMessage from './FlashMessage';
+import FlashMessage from "./FlashMessage";
 
 function Sidebar({
   isSidebarOpen,
@@ -30,8 +33,27 @@ function Sidebar({
     },
     {
       href: "user.index",
-      name: "User",
-      icon: <ContactRoundIcon size={18} />,
+      name: "Anggota",
+      icon: <Users size={18} />,
+      isVisible: true,
+    },
+    {
+      href: "transaction.index",
+      name: "Transaksi",
+      icon: <Banknote size={18} />,
+
+      isVisible: true,
+    },
+    {
+      href: "saving.index",
+      name: "Simpanan",
+      icon: <PiggyBank size={18} />,
+      isVisible: true,
+    },
+    {
+      href: "loan.index",
+      name: "Pinjaman",
+      icon: <HandCoins size={18} />,
       isVisible: true,
     },
   ];
@@ -57,7 +79,7 @@ function Sidebar({
       <nav className="flex flex-col gap-2">
         {LINKS.map(
           (link, i) =>
-            link.isVisible && (
+            link?.isVisible && (
               <NavLink
                 key={i}
                 href={route(link.href)}

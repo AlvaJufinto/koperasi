@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Loan;
+use App\Models\Transaction;
+use App\Models\TransactionType;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,53 +14,79 @@ class TransactionController extends Controller
 	/**
 	 * Display a listing of the resource.
 	 */
+	// TransactionController.php
 	public function index(Request $request)
 	{
-		$month = $request->input('month', now()->format('Y-m'));
+		$month = $request->input('month') ?? now()->format('Y-m');
 
-		$users = User::with(['transactions' => function ($q) use ($month) {
-			$q->whereYear('date', substr($month, 0, 4))
-				->whereMonth('date', substr($month, 5, 2))
-				->with('transactionType');
-		}])->get();
+		$users = User::with('status')->get();
 
-		$data = $users->map(function ($user) {
-			$grouped = $user->transactions->groupBy('transactionType.code');
+		$transactions = Transaction::whereMonth('date', substr($month, 5, 2))
+			->whereYear('date', substr($month, 0, 4))
+			->get()
+			->groupBy('user_id');
+
+		$transactionTypes = TransactionType::pluck('code', 'id');
+
+		$data = $users->map(function ($user) use ($transactions, $transactionTypes) {
+			$userTx = $transactions->get($user->id, collect());
+			$sum = fn($code) => $userTx->filter(fn($t) => $transactionTypes[$t->transaction_type_id] === $code)->sum('amount');
+
 			return [
 				'id' => $user->id,
 				'code' => $user->code,
 				'name' => $user->name,
-				'angsuran' => $grouped['ANGSURAN']->sum('amount') ?? 0,
-				'bunga' => $grouped['BUNGA']->sum('amount') ?? 0,
-				'sw' => $grouped['SW']->sum('amount') ?? 0,
-				'ss' => $grouped['SS']->sum('amount') ?? 0,
-				'tarik_ss' => $grouped['TARIK_SS']->sum('amount') ?? 0,
-				'pinjaman' => $grouped['PINJAMAN']->sum('amount') ?? 0,
+				'status' => $user->status->code,
+				'angsuran' => $sum('ANGSURAN'),
+				'bunga' => $sum('BUNGA'),
+				'sw' => $sum('SW'),
+				'ss' => $sum('SS'),
+				'tarik_ss' => $sum('TARIK_SS'),
+				'total' => $sum('ANGSURAN') + $sum('BUNGA') + $sum('SW') + $sum('SS'),
 			];
 		});
 
 		return Inertia::render('Transaction/Index', [
-			'records' => $data,
 			'month' => $month,
+			'records' => $data,
 		]);
 	}
+
 
 	/**
 	 * Show the form for creating a new resource.
 	 */
 	public function create()
 	{
-		//
+		$users = User::get();
+		$loans = Loan::get();
+		$transactionTypes = TransactionType::get();
+
+		return Inertia::render('Transaction/Create', [
+			'users' => $users,
+			'transactionTypes' => $transactionTypes,
+			'loans' => $loans,
+		]);
 	}
+
 
 	/**
 	 * Store a newly created resource in storage.
 	 */
 	public function store(Request $request)
 	{
-		//
-	}
+		$validated = $request->validate([
+			'user_id' => ['required', 'exists:users,id'],
+			'transaction_type_id' => ['required', 'exists:transaction_types,id'],
+			'date' => ['required', 'date'],
+			'amount' => ['required', 'numeric', 'min:1'],
+			'note' => ['nullable', 'string'],
+		]);
 
+		Transaction::create($validated);
+
+		return to_route('transaction.index')->with('success', 'Transaksi berhasil ditambahkan.');
+	}
 	/**
 	 * Display the specified resource.
 	 */
