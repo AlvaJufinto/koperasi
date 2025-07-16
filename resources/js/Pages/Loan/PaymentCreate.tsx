@@ -4,6 +4,7 @@ import Button from "@/Components/Button";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { formatRupiah } from "@/utils";
 import { Head, router, useForm } from "@inertiajs/react";
 
 // Proper TypeScript interfaces
@@ -37,6 +38,7 @@ interface PaymentFormData {
 interface PaymentCreateProps {
   auth: Auth;
   loan: Loan;
+  installment_number: number;
 }
 
 interface ValidationErrors {
@@ -45,11 +47,13 @@ interface ValidationErrors {
   note?: string;
 }
 
-export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
+export default function PaymentCreate({
+  auth,
+  loan,
+  installment_number,
+}: PaymentCreateProps) {
   const [payoff, setPayoff] = useState<boolean>(false);
-  const [installmentCount, setInstallmentCount] = useState<number>(0);
   const [monthlyInterest, setMonthlyInterest] = useState<number>(0);
-  const [totalWithInterest, setTotalWithInterest] = useState<number>(0);
   const [clientErrors, setClientErrors] = useState<ValidationErrors>({});
 
   const { data, setData, post, processing, errors } = useForm<PaymentFormData>({
@@ -58,21 +62,6 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
     note: "",
   });
 
-  // Utility function untuk format currency
-  const formatCurrency = useCallback((amount: number): string => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  }, []);
-
-  // Utility function untuk format number
-  const formatNumber = useCallback((amount: number): string => {
-    return new Intl.NumberFormat("id-ID").format(amount);
-  }, []);
-
   // Utility function untuk parse number dengan handling decimal yang proper
   const parseAmount = useCallback((value: string): number => {
     const cleanValue = value.replace(/[^\d.-]/g, "");
@@ -80,15 +69,21 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
     return isNaN(parsed) ? 0 : Math.round(parsed);
   }, []);
 
-  // Hitung interest dengan precision yang lebih baik
+  // Hitung interest dari principal (total pinjaman awal), bukan dari sisa
   const calculateInterest = useCallback(
-    (remainingAmount: number, interestRate: number): number => {
-      return Math.round(remainingAmount * (interestRate / 100));
+    (principal: number, interestRate: number): number => {
+      return Math.round(principal * (interestRate / 100));
     },
     []
   );
 
-  // Validasi client-side
+  // Hitung bunga bulanan - fixed dari principal
+  useEffect(() => {
+    const interest = calculateInterest(loan.principal, loan.interest);
+    setMonthlyInterest(interest);
+  }, [loan.principal, loan.interest, calculateInterest]);
+
+  // Validasi client-side yang disederhanakan
   const validateForm = useCallback((): boolean => {
     const newErrors: ValidationErrors = {};
     const amount = parseAmount(data.amount);
@@ -98,7 +93,6 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
       newErrors.date = "Tanggal wajib diisi";
     } else {
       const selectedDate = new Date(data.date);
-      const today = new Date();
       const maxDate = new Date();
       maxDate.setMonth(maxDate.getMonth() + 1);
 
@@ -131,7 +125,7 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
     parseAmount,
   ]);
 
-  // Hitung otomatis jika pelunasan
+  // Auto-fill amount untuk pelunasan
   useEffect(() => {
     if (payoff) {
       setData("amount", loan.remaining_amount.toString());
@@ -139,28 +133,6 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
       setData("amount", "");
     }
   }, [payoff, loan.remaining_amount, setData]);
-
-  // Hitung angsuran keberapa
-  useEffect(() => {
-    const paidAmount = loan.principal - loan.remaining_amount;
-    const nextInstallment =
-      Math.floor(paidAmount / loan.installment_amount) + 1;
-    setInstallmentCount(Math.max(1, nextInstallment));
-  }, [loan]);
-
-  // Hitung bunga + total bulan ini (berdasarkan nominal yang diketik)
-  useEffect(() => {
-    const nominal = parseAmount(data.amount);
-    const interest = calculateInterest(loan.remaining_amount, loan.interest);
-    setMonthlyInterest(interest);
-    setTotalWithInterest(nominal + interest);
-  }, [
-    data.amount,
-    loan.remaining_amount,
-    loan.interest,
-    parseAmount,
-    calculateInterest,
-  ]);
 
   // Handle form submission
   const submit = useCallback(
@@ -180,7 +152,6 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
       post(route("loan.payment.store", loan.id), {
         data: formData,
         onSuccess: () => {
-          // Reset form atau redirect
           console.log("Payment berhasil disimpan");
         },
         onError: (errors) => {
@@ -195,7 +166,7 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
   const handleAmountChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
-      // Allow only numbers and decimal point
+      // Allow only numbers
       const sanitizedValue = value.replace(/[^\d]/g, "");
       setData("amount", sanitizedValue);
     },
@@ -210,23 +181,34 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
     [clientErrors, errors]
   );
 
+  // Computed values untuk display
+  const currentAmount = parseAmount(data.amount);
+  const totalWithInterest = currentAmount + monthlyInterest;
+  const remainingAfterPayment = loan.remaining_amount - currentAmount;
+  const installmentAmountWithoutInterest =
+    loan.installment_amount - monthlyInterest;
+
   return (
     <AuthenticatedLayout
       user={auth.user}
       header={
-        <h2 className="text-xl font-semibold">Bayar Pinjaman #{loan.id}</h2>
+        <h2 className="text-xl font-semibold">
+          Bayar Pinjaman: {loan.user.name}
+        </h2>
       }
     >
       <Head title="Bayar Pinjaman" />
 
       <div className="max-w-xl mx-auto mt-6 bg-white p-6 rounded-lg shadow-lg space-y-6">
-        {/* Loan Information */}
+        {/* Back Button */}
         <Button
           type="default"
           onClick={() => router.visit(document.referrer || route("loan.index"))}
         >
           ← Kembali
         </Button>
+
+        {/* Loan Information */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="font-semibold text-lg mb-3">Informasi Pinjaman</h3>
           <div className="text-sm space-y-2">
@@ -237,20 +219,24 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
             <div className="flex justify-between">
               <span className="font-medium">Sisa Pinjaman:</span>
               <span className="font-semibold text-red-600">
-                {formatCurrency(loan.remaining_amount)}
+                {formatRupiah(loan.remaining_amount)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Angsuran Bulanan:</span>
-              <span>{formatCurrency(loan.installment_amount)}</span>
+              <span>{formatRupiah(loan.installment_amount)}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Bunga per Bulan:</span>
               <span>{loan.interest}%</span>
             </div>
             <div className="flex justify-between">
+              <span className="font-medium">Pokok Bulanan:</span>
+              <span>{formatRupiah(installmentAmountWithoutInterest)}</span>
+            </div>
+            <div className="flex justify-between">
               <span className="font-medium">Angsuran ke:</span>
-              <span className="font-semibold">{installmentCount}</span>
+              <span className="font-semibold">{installment_number}</span>
             </div>
           </div>
         </div>
@@ -312,13 +298,13 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
             )}
             {data.amount && !getErrorMessage("amount") && (
               <p className="text-sm text-gray-600 mt-1">
-                Nominal: {formatCurrency(parseAmount(data.amount))}
+                Nominal: {formatRupiah(currentAmount)}
               </p>
             )}
           </div>
 
           {/* Payment Summary */}
-          {data.amount && parseAmount(data.amount) > 0 && (
+          {data.amount && currentAmount > 0 && (
             <div className="bg-green-50 p-4 rounded-lg">
               <h4 className="font-semibold text-green-800 mb-2">
                 Ringkasan Pembayaran
@@ -326,25 +312,21 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
               <div className="text-sm space-y-1">
                 <div className="flex justify-between">
                   <span>Pokok:</span>
-                  <span>{formatCurrency(parseAmount(data.amount))}</span>
+                  <span>{formatRupiah(currentAmount)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Bunga bulan ini:</span>
-                  <span>{formatCurrency(monthlyInterest)}</span>
+                  <span>{formatRupiah(monthlyInterest)}</span>
                 </div>
                 <div className="flex justify-between border-t pt-1 font-semibold">
                   <span>Total harus dibayar:</span>
                   <span className="text-green-700">
-                    {formatCurrency(totalWithInterest)}
+                    {formatRupiah(totalWithInterest)}
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Sisa setelah bayar:</span>
-                  <span>
-                    {formatCurrency(
-                      loan.remaining_amount - parseAmount(data.amount)
-                    )}
-                  </span>
+                  <span>{formatRupiah(remainingAfterPayment)}</span>
                 </div>
               </div>
             </div>
@@ -378,9 +360,7 @@ export default function PaymentCreate({ auth, loan }: PaymentCreateProps) {
           <div className="flex justify-end pt-4">
             <Button
               type="primary"
-              disabled={
-                processing || !data.amount || parseAmount(data.amount) <= 0
-              }
+              disabled={processing || !data.amount || currentAmount <= 0}
               isLoading={processing}
               className="px-6 py-2"
             >

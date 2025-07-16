@@ -6,7 +6,8 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { formatRupiah } from "@/utils";
 import { Head, router } from "@inertiajs/react";
 
-export default function Index({ auth, month, records }: any) {
+export default function Index({ auth, month, records, months }: any) {
+  console.log("🚀 ~ Index ~ months:", months);
   const [selectedMonth, setSelectedMonth] = useState(month);
 
   const handleFilter = () => {
@@ -39,16 +40,22 @@ export default function Index({ auth, month, records }: any) {
       <div className="p-4 space-y-4 bg-white shadow rounded-lg">
         <div className="flex justify-between">
           <div className="flex space-x-2">
-            <input
-              type="month"
+            <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="border px-2 py-1 rounded"
-            />
+              className="border pl-2 pr-10 py-1 rounded"
+            >
+              {months.map((m: any) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
             <Button onClick={handleFilter} type="primary">
               Filter
             </Button>
           </div>
+
           {/*<Link
             href={route("transaction.create")}
             className="text-white bg-blue-600 px-4 py-2 rounded text-sm"

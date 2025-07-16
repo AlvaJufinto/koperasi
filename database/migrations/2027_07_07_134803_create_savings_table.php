@@ -22,7 +22,7 @@ return new class extends Migration
 
 			$table->bigInteger('amount');
 			$table->date('date');
-			$table->string('notes')->nullable();
+			$table->string('note')->nullable();
 
 			$table->timestamps();
 		});

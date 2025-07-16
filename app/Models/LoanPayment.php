@@ -15,7 +15,7 @@ class LoanPayment extends Model
 		'amount',
 		'date',
 		'is_full_settlement',
-		'notes',
+		'note',
 	];
 
 	public function loan()

@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Loan;
+use App\Models\LoanPayment;
+use App\Models\LoanStatus;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -40,7 +43,7 @@ class LoanController extends Controller
 			'interest' => 'required|numeric|min:0',
 			'tenor_months' => 'required|integer|min:1',
 			'approved_date' => 'required|date',
-			'notes' => 'nullable|string',
+			'note' => 'nullable|string',
 		]);
 
 		$admin_fee_amount = (int) floor($data['principal'] * ($data['admin_fee'] / 100));
@@ -58,7 +61,8 @@ class LoanController extends Controller
 			'installment_amount' => $installment_amount,
 			'remaining_amount' => $data['principal'],
 			'approved_date' => $data['approved_date'],
-			'notes' => $data['notes'] ?? null,
+			'note' => $data['note'] ?? null,
+			'loan_status_id' => LoanStatus::ACTIVE, // Assuming 1 is the ID for 'active' status
 		]);
 
 		return redirect()->route('loan.index')->with('success', 'Pinjaman berhasil dibuat.');
@@ -66,16 +70,88 @@ class LoanController extends Controller
 
 	public function show(Loan $loan)
 	{
-		$loan->load('user');
+		$loan->load(['user', 'loanPayments']);
+
+		$start = Carbon::parse(config('koperasi.periode.start_date'))->startOfMonth();
+		$end = Carbon::parse(config('koperasi.periode.end_date'))->endOfMonth();
+
+		// Total pembayaran di periode
+		$paymentsInPeriod = $loan->loanPayments()
+			->whereBetween('date', [$start, $end])
+			->get();
+
+		$totalPaidInPeriod = $paymentsInPeriod->sum('amount');
+		$totalPaid = $loan->loanPayments->sum('amount');
+		$installmentNumber = $loan->loanPayments->count() + 1;
+		$monthlyInterest = round($loan->principal * ($loan->interest / 100));
+		$totalInterestPaid = $monthlyInterest * $loan->loanPayments->count();
+		$remaining = $loan->remaining_amount;
+
+		// Generate list bulan
+		$months = [];
+		$current = $start->copy();
+		while ($current->lte($end)) {
+			$months[] = $current->format('Y-m');
+			$current->addMonth();
+		}
+
+		$installmentCounter = 0;
+
+		// Summary per bulan
+		$monthly_data = collect($months)->map(function ($month) use ($loan, $monthlyInterest, &$installmentCounter) {
+			$periodStart = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+			$periodEnd = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+
+			$payments = $loan->loanPayments()
+				->whereBetween('date', [$periodStart, $periodEnd])
+				->get();
+
+			$interest_payment = $payments->count() > 0 ? $monthlyInterest : 0;
+
+			$total_payment = $payments->sum('amount') + $interest_payment;
+			$principal_payment = $total_payment - $interest_payment;
+
+			// Increment installment counter jika ada pembayaran
+			if ($payments->count() > 0) {
+				$installmentCounter++;
+			}
+
+			$installment_count = $payments->count() > 0 ? $installmentCounter : 0;
+
+			return [
+				'month' => $periodStart->translatedFormat('M Y'),
+				'installment_count' => $installment_count,
+				'total_payment' => $total_payment,
+				'interest_payment' => $interest_payment,
+				'principal_payment' => $principal_payment,
+			];
+		});
 
 		return Inertia::render('Loan/Show', [
 			'loan' => $loan,
+			'summary' => [
+				'total_paid_in_period' => $totalPaidInPeriod,
+				'total_paid' => $totalPaid,
+				'installment_number' => $installmentNumber,
+				'total_interest_paid' => $totalInterestPaid,
+				'remaining_amount' => $remaining,
+			],
+			'monthly_data' => $monthly_data,
 		]);
 	}
 
+
 	public function payCreate(Loan $loan)
-	{
-		return Inertia::render('Loan/PaymentCreate', ['loan' => $loan->load('user')]);
+	{;
+
+		$installment_number = $loan->loanPayments()->count() + 1;
+
+		//dd($installment_number);
+
+		return Inertia::render('Loan/PaymentCreate', [
+			'loan' => $loan->load('user'),
+			'installment_number' => $installment_number
+		]);
 	}
 
 	public function payStore(Request $request, Loan $loan)
@@ -88,17 +164,27 @@ class LoanController extends Controller
 
 		DB::transaction(function () use ($loan, $data) {
 			$loan->remaining_amount -= $data['amount'];
-			if ($loan->remaining_amount < 0) {
+
+			if ($loan->remaining_amount <= 0) {
 				$loan->remaining_amount = 0;
+				$loan->loan_status_id = LoanStatus::PAID_OFF;
+			} else {
+				$loan->loan_status_id = LoanStatus::ACTIVE;
 			}
+
 			$loan->save();
 
-			$loan->payments()->create([
-				'date' => $data['date'],
+			$loan->loanPayments()->create([
+				'loan_id' => $loan->id,
+				'user_id' => auth()->id(),
 				'amount' => $data['amount'],
-				'note' => $data['note'],
+				'date' => $data['date'],
+				'is_full_settlement' => $loan->remaining_amount <= 0,
+				'note' => $data['note'] ?? null
 			]);
 		});
+
+		LoanPayment::insert([]);
 
 		return redirect()->route('loan.index')->with('success', 'Pembayaran berhasil.');
 	}

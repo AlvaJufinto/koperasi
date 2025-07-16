@@ -16,8 +16,9 @@ return new class extends Migration
 
 			$table->foreignId('user_id')->constrained();
 
-			// jumlah pinjaman yg harus dikembalikan
+			// jumlah pinjaman yg harus dikembalikan tanpa bunga bulanan
 			$table->bigInteger('principal');
+
 			// admin fee verdasarkan persen-an
 			$table->decimal('admin_fee')->default(1.00);
 			// admin fee yang real
@@ -28,6 +29,7 @@ return new class extends Migration
 			$table->decimal('interest')->default(1.00);
 			// lama angsuran dalam bulan
 			$table->integer('tenor_months');
+
 			// jumlah yang harus dibayar perbulannya;
 			$table->bigInteger('installment_amount');
 
@@ -37,7 +39,7 @@ return new class extends Migration
 			// tgl persetujuan dan pencairan
 			$table->date('approved_date');
 			// alasan penolakan, catatan, dll
-			$table->text('notes')->nullable();
+			$table->text('note')->nullable();
 
 			$table->timestamps();
 		});

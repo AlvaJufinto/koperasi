@@ -17,7 +17,7 @@ export default function Create({ auth, users }: any) {
     interest: "1.00",
     tenor_months: "12",
     approved_date: new Date().toISOString().slice(0, 10),
-    notes: "",
+    note: "",
   });
 
   const [adminFeeAmount, setAdminFeeAmount] = useState(0);
@@ -142,15 +142,15 @@ export default function Create({ auth, users }: any) {
           </div>
 
           <div>
-            <InputLabel htmlFor="notes" value="Catatan" />
+            <InputLabel htmlFor="note" value="Catatan" />
             <textarea
-              id="notes"
+              id="note"
               className="w-full border rounded p-2 text-sm"
               rows={3}
-              value={data.notes}
-              onChange={(e) => setData("notes", e.target.value)}
+              value={data.note}
+              onChange={(e) => setData("note", e.target.value)}
             />
-            <p className="text-red-500 text-sm">{errors.notes}</p>
+            <p className="text-red-500 text-sm">{errors.note}</p>
           </div>
 
           {/* Real-time Calculations */}

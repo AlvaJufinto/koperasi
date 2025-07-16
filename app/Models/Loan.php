@@ -20,7 +20,8 @@ class Loan extends Model
 		'installment_amount',
 		'remaining_amount',
 		'approved_date',
-		'notes',
+		'loan_status_id',
+		'note',
 	];
 
 	public function user()

@@ -26,35 +26,32 @@ class SavingController extends Controller
 		$records = $users->map(function ($user) use ($period) {
 			$sp = $user->savings
 				->where('saving_type_id', TransactionType::SP)
-				->where('date', '<=', $period->endOfMonth())
+				->where('date', '<=', $period->copy()->endOfMonth())
 				->sum('amount');
 
 			$sw = $user->savings
 				->where('saving_type_id', TransactionType::SW)
-				->where('date', '<=', $period->endOfMonth())
+				->where('date', '<=', $period->copy()->endOfMonth())
 				->sum('amount');
 
-			$ss =
-				(int)($user->savings
-					->where('saving_type_id', TransactionType::SS)
-					->where('date', '<=', $period->endOfMonth())
-					->sum('amount'))
-				-
-				(int)
-				($user->savings
+			$ss = (int) $user->savings
+				->where('saving_type_id', TransactionType::SS)
+				->where('date', '<=', $period->copy()->endOfMonth())
+				->sum('amount')
+				- (int) $user->savings
 					->where('saving_type_id', TransactionType::TARIK_SS)
-					->where('date', '<=', $period->endOfMonth())
-					->sum('amount'));
+					->where('date', '<=', $period->copy()->endOfMonth())
+					->sum('amount');
 
 			$tarik_ss = $user->savings
 				->where('saving_type_id', TransactionType::TARIK_SS)
 				->whereBetween('date', [
-					$period->startOfMonth()->format('Y-m-d'),
-					$period->endOfMonth()->format('Y-m-d'),
+					$period->copy()->startOfMonth()->format('Y-m-d'),
+					$period->copy()->endOfMonth()->format('Y-m-d'),
 				])
 				->sum('amount');
 
-			$total = $sp + $sw + $ss; // Tidak dikurangi tarik_ss karena hanya menunjukkan tabungan masuk
+			$total = $sp + $sw + $ss;
 
 			return [
 				'id' => $user->id,
@@ -68,11 +65,23 @@ class SavingController extends Controller
 			];
 		});
 
-		//dd($records->toArray());
+		// Generate months based on periode config
+		$start = Carbon::parse(config('koperasi.periode.start_date'))->startOfMonth();
+		$end = Carbon::parse(config('koperasi.periode.end_date'))->endOfMonth();
+		$months = [];
+
+		while ($start->lte($end)) {
+			$months[] = [
+				'value' => $start->format('Y-m'),
+				'label' => $start->translatedFormat('F Y'),
+			];
+			$start->addMonth();
+		}
 
 		return Inertia::render('Saving/Index', [
 			'records' => $records,
 			'month' => $month,
+			'months' => $months,
 		]);
 	}
 

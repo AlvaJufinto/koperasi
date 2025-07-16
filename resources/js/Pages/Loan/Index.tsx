@@ -3,7 +3,13 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link } from "@inertiajs/react";
 
 export default function Index({ auth, loans }: any) {
+  console.log("🚀 ~ Index ~ loans:", loans);
   const columns = [
+    {
+      label: "Kode",
+      accessor: "user.code",
+      render: (loan: any) => loan.user.code,
+    },
     {
       label: "Nama",
       accessor: "user.name",

@@ -14,7 +14,7 @@ class Saving extends Model
 		'saving_type_id',
 		'amount',
 		'date',
-		'notes',
+		'note',
 	];
 
 	public function user()

@@ -46,9 +46,22 @@ class TransactionController extends Controller
 			];
 		});
 
+		$start = \Carbon\Carbon::parse(config('koperasi.periode.start_date'))->startOfMonth();
+		$end = \Carbon\Carbon::parse(config('koperasi.periode.end_date'))->endOfMonth();
+
+		$months = [];
+		while ($start->lte($end)) {
+			$months[] = [
+				'value' => $start->format('Y-m'),
+				'label' => $start->translatedFormat('F Y'),
+			];
+			$start->addMonth();
+		}
+
 		return Inertia::render('Transaction/Index', [
 			'month' => $month,
 			'records' => $data,
+			'months' => $months,
 		]);
 	}
 

@@ -1,9 +1,7 @@
-import Table from '@/Components/Table';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import {
-	Head,
-	Link,
-} from '@inertiajs/react';
+import Table from "@/Components/Table";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { formatRupiah } from "@/utils";
+import { Head, Link } from "@inertiajs/react";
 
 export default function Index({ auth, users }: any) {
   const getSavingAmount = (user: any, type: string) =>
@@ -45,29 +43,31 @@ export default function Index({ auth, users }: any) {
                   label: "SP",
                   accessor: "sp",
                   align: "right",
-                  render: (user) => getSavingAmount(user, "SP"),
+                  render: (user) => formatRupiah(getSavingAmount(user, "SP")),
                 },
                 {
                   label: "SW",
                   accessor: "sw",
                   align: "right",
-                  render: (user) => getSavingAmount(user, "SW"),
+                  render: (user) => formatRupiah(getSavingAmount(user, "SW")),
                 },
                 {
                   label: "SS",
                   accessor: "ss",
                   align: "right",
-                  render: (user) => getSavingAmount(user, "SS"),
+                  render: (user) => formatRupiah(getSavingAmount(user, "SS")),
                 },
                 {
                   label: "Total Pinj.",
                   accessor: "total_loan",
                   align: "right",
+                  render: (user) => formatRupiah(user.total_loan || 0),
                 },
                 {
                   label: "Sisa Pinj.",
                   accessor: "remaining_loan",
                   align: "right",
+                  render: (user) => formatRupiah(user.remaining_loan || 0),
                 },
                 {
                   label: "Action",
